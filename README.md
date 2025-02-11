@@ -1,4 +1,4 @@
----
+
 Agrisense
 Agrisense is an innovative application designed to monitor soil conditions using advanced sensors and artificial intelligence. The app provides real-time insights into soil properties and weather conditions, helping farmers make informed decisions to optimize crop yield and health.
 Table of Contents
@@ -40,4 +40,5 @@ Create a new branch:
 5. Open a pull request.
 License
 This project is licensed under the MIT License - see the LICENSE file for details.
----
+
+# frontend
