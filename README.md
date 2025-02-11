@@ -1,51 +1,43 @@
-# Welcome to your Expo app 👋
-
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
-
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-    npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
-# frontend
+---
+Agrisense
+Agrisense is an innovative application designed to monitor soil conditions using advanced sensors and artificial intelligence. The app provides real-time insights into soil properties and weather conditions, helping farmers make informed decisions to optimize crop yield and health.
+Table of Contents
+Features
+Technologies Used
+Installation
+Usage
+Contributing
+License
+Features
+Soil Monitoring: Utilize sensors to gather data on soil moisture, pH, and nutrient levels.
+AI Image Analysis: Capture images of the soil and analyze its properties using AI algorithms.
+Weather Integration: Access real-time weather data to understand its impact on soil conditions.
+User-Friendly Dashboard: An intuitive interface for users to view soil and weather data, recent activities, and recommendations.
+Community Engagement: Share insights and experiences with other users in the community section.
+Technologies Used
+Frontend: React Native, Expo
+Backend: Node.js, Express (future implementation)
+Database: MongoDB (future implementation)
+AI/ML: TensorFlow.js or similar libraries for image analysis
+Sensors: Various soil sensors for data collection
+Installation
+Clone the repository:
+Install dependencies:
+Set up environment variables:
+Create a .env file in the root directory and add your API URL:
+Start the development server:
+Usage
+Launch the app on your mobile device or emulator.
+Create an account or sign in to access the dashboard.
+Use the sidebar to navigate through different sections of the app.
+Monitor soil conditions and weather data in real-time.
+Contributing
+Contributions are welcome! If you have suggestions for improvements or new features, please open an issue or submit a pull request.
+Fork the repository.
+Create a new branch:
+3. Make your changes and commit them:
+4. Push to the branch:
+5. Open a pull request.
+License
+This project is licensed under the MIT License - see the LICENSE file for details.
+---
