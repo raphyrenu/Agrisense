@@ -1,6 +1,6 @@
 # 🌱 Agrisense
 
-![Agrisense Banner](https://example.com/banner.png)
+![Agrisense Banner](./icon.png)
 
 Agrisense is an innovative application designed to monitor soil conditions using advanced sensors and artificial intelligence. The app provides real-time insights into soil properties and weather conditions, helping farmers make informed decisions to optimize crop yield and health.
 
