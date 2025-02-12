@@ -74,7 +74,7 @@ export default function Signup() {
             });
 
             if (response.success) {
-                router.push('/signin');
+                router.push(`/verifyEmail?email=${encodeURIComponent(formData.email)}`);
             } else {
                 alert(response.message || 'Signup failed');
             }

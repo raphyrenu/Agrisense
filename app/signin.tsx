@@ -38,9 +38,7 @@ export default function SignIn() {
             });
 
             if (response.success) {
-                // You might want to store the token here
-                // await SecureStore.setItemAsync('userToken', response.token);
-                router.replace('/dashboard');
+                router.push(`/verifyEmail?email=${encodeURIComponent(formData.email)}`);
             } else {
                 alert(response.message || 'Invalid credentials');
             }
