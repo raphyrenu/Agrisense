@@ -108,6 +108,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 📧 **Email**: agrisense@example.com
 🌍 **Website**: [www.agrisense.com](https://www.agrisense.com)
-🐙 **GitHub**: [Agrisense Repo](https://github.com/your-repo/agrisense)
+🐙 **GitHub**: [Agrisense Repo](https://github.com/AGRISENSEPROJECT)
 
 # frontend
