@@ -45,7 +45,7 @@ export default function VerifyEmail() {
 
     const handleContinue = () => {
         setModalVisible(false); // Close the modal
-        router.push('/dashboard'); // Navigate to the dashboard
+        router.push('/SoilDetection'); // Navigate to the dashboard
     };
 
     return (
