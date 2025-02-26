@@ -3,10 +3,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, {
+    withTiming,
+    useAnimatedStyle,
+    useSharedValue,
+} from 'react-native-reanimated';
 
 export default function VerifyEmail() {
     const router = useRouter();
-    const [code, setCode] = useState('');
+    const [code, setCode] = useState(['', '', '', '']); // Changed to array for separate inputs
     const [error, setError] = useState('');
     const [email, setEmail] = useState<string>('raphyboy@gmail.com'); // Default email
     const [modalVisible, setModalVisible] = useState(false); // State for modal visibility
@@ -20,16 +25,76 @@ export default function VerifyEmail() {
     }, [router.query?.email]);
 
     const handleVerify = () => {
-        if (code.length !== 4) {
+        const combinedCode = code.join('');
+        if (code.some(digit => digit === '')) {
             setError('Please enter a valid 4-digit code');
             return;
         }
 
         // Simulate verification logic
-        if (code === '1234') { // Replace '1234' with the actual verification logic
-            setModalVisible(true); // Show the modal on successful verification
+        if (combinedCode === '1234') {
+            setModalVisible(true);
+            // Modal will auto-close after 3 seconds and redirect to community page
+            setTimeout(() => {
+                setModalVisible(false);
+                router.push('/(main)/community');
+            }, 3000);
         } else {
             setError('Invalid verification code');
+        }
+    };
+
+    const handleCodeChange = (value: string, index: number) => {
+        // Remove non-numeric characters and get only the last digit if multiple digits
+        const cleanValue = value.replace(/[^0-9]/g, '');
+        const lastDigit = cleanValue.slice(-1);
+
+        // Find first empty position
+        let targetIndex = 0;
+        while (targetIndex < 4 && code[targetIndex] !== '') {
+            targetIndex++;
+        }
+
+        const newCode = [...code];
+
+        if (cleanValue.length >= 1) {
+            // For single digit input
+            if (cleanValue.length === 1) {
+                if (targetIndex < 4) {
+                    newCode[targetIndex] = lastDigit;
+                    setCode(newCode);
+
+                    // Focus next input if available
+                    if (targetIndex < 3) {
+                        const nextInput = document.querySelector(`input[name="code-${targetIndex + 1}"]`) as HTMLElement;
+                        if (nextInput) nextInput.focus();
+                    }
+                }
+            } else {
+                // For pasting multiple digits
+                const digits = cleanValue.split('').slice(0, 4);
+                digits.forEach((digit, i) => {
+                    if (i < 4) newCode[i] = digit;
+                });
+                setCode(newCode);
+            }
+        }
+    };
+
+    const handleKeyPress = (e: any, index: number) => {
+        if (e.nativeEvent.key === 'Backspace') {
+            const newCode = [...code];
+            // Only delete if there's a value in current input
+            if (code[index]) {
+                newCode[index] = '';
+                setCode(newCode);
+            } else if (index > 0) {
+                // Move to previous input if current is empty
+                newCode[index - 1] = '';
+                setCode(newCode);
+                const prevInput = document.querySelector(`input[name="code-${index - 1}"]`) as HTMLElement;
+                if (prevInput) prevInput.focus();
+            }
         }
     };
 
@@ -43,91 +108,132 @@ export default function VerifyEmail() {
         router.push('/signin');
     };
 
-    const handleContinue = () => {
-        setModalVisible(false); // Close the modal
-        router.push('/SoilDetection'); // Navigate to the dashboard
+    // Custom success popup component with progress bar
+    const SuccessPopup = ({ visible, onClose }: { visible: boolean; onClose: () => void }) => {
+        const progress = useSharedValue(1);
+
+        useEffect(() => {
+            if (visible) {
+                progress.value = 1;
+                // Start shrinking animation
+                progress.value = withTiming(0, { duration: 3000 });
+
+                // Auto close after 3 seconds
+                const timer = setTimeout(() => {
+                    onClose();
+                }, 3000);
+
+                return () => clearTimeout(timer);
+            }
+        }, [visible]);
+
+        const progressStyle = useAnimatedStyle(() => ({
+            width: `${progress.value * 100}%`,
+        }));
+
+        if (!visible) return null;
+
+        return (
+            <View className="absolute inset-0 bg-black/50 justify-center items-center">
+                <View className="bg-white rounded-2xl p-6 m-6 items-center w-[80%]">
+                    <View className="w-16 h-16 bg-[#0B4D26] rounded-full items-center justify-center mb-4">
+                        <Ionicons name="checkmark" size={30} color="white" />
+                    </View>
+
+                    <Text className="text-xl font-bold text-center mb-2">
+                        Email Verified!
+                    </Text>
+
+                    <Text className="text-gray-600 text-center mb-6">
+                        Your email has been successfully verified
+                    </Text>
+
+                    {/* Progress bar */}
+                    <View className="w-full h-1 bg-gray-200 rounded-full overflow-hidden">
+                        <Animated.View
+                            className="h-full bg-[#0B4D26] rounded-full"
+                            style={progressStyle}
+                        />
+                    </View>
+                </View>
+            </View>
+        );
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white pt-6">
-            <ScrollView className="flex-1 px-4">
-                <TouchableOpacity onPress={() => router.back()} className="mt-2 p-2">
-                    <Ionicons name="arrow-back" size={24} color="#000" />
-                </TouchableOpacity>
+        <SafeAreaView className="flex-1 bg-white">
+            <View className="flex-1 px-6 items-center">
+                <Image
+                    source={require('../assets/verification-illustration.png')}
+                    className="w-40 h-40 mt-20 mb-10"
+                    resizeMode="contain"
+                />
 
-                <View className="mt-4">
-                    <Text className="text-2xl font-bold">Verify your email</Text>
-                    <Text className="text-gray-500 mt-2">
+                <View className="w-full mb-2">
+                    <Text className="text-[#0B4D26] text-2xl font-semibold text-center">
+                        Verify your email
+                    </Text>
+                    <Text className="text-gray-600 mt-2 text-center text-sm">
                         Please enter the 4-digit code sent to {email}
                     </Text>
                 </View>
 
-                <View className="items-center justify-center my-8">
-                    <Image
-                        source={require('../assets/verification-illustration.png')} // Add your illustration image
-                        className="w-64 h-64"
-                        resizeMode="contain"
-                    />
-                </View>
-
-                <View className="space-y-4">
-                    <View>
+                {/* Code input container */}
+                <View className="w-full flex-row justify-between mt-6 mb-2">
+                    {[0, 1, 2, 3].map((index) => (
                         <TextInput
-                            placeholder="Enter 4-digit code"
-                            value={code}
-                            onChangeText={setCode}
-                            className={`bg-gray-100 p-4 rounded-lg ${error ? 'border-red-500 border' : ''}`}
+                            key={index}
+                            name={`code-${index}`}
+                            value={code[index]}
+                            onChangeText={(value) => handleCodeChange(value, index)}
+                            onKeyPress={(e) => handleKeyPress(e, index)}
+                            className="w-[22%] h-12 bg-[#F5F5F5] rounded-md text-center text-lg border-[0.5px] border-gray-200 outline-none"
                             keyboardType="numeric"
                             maxLength={4}
+                            style={{ fontSize: 18 }}
+                            selectTextOnFocus={true}
                         />
-                        {error ? <Text className="text-red-500 text-sm mt-1">{error}</Text> : null}
-                    </View>
-
-                    <TouchableOpacity
-                        onPress={handleResendCode}
-                        className="items-end"
-                    >
-                        <Text className="text-[#0B4D26] text-sm">Resend code</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        onPress={handleVerify}
-                        className="bg-[#0B4D26] p-4 rounded-lg mt-4"
-                    >
-                        <Text className="text-white text-center font-semibold text-lg">
-                            Confirm
-                        </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        onPress={handleChangeEmail}
-                        className="mt-4"
-                    >
-                        <Text className="text-[#0B4D26] text-sm">Change email</Text>
-                    </TouchableOpacity>
+                    ))}
                 </View>
-            </ScrollView>
 
-            {/* Confirmation Modal */}
-            <Modal
-                animationType="slide"
-                transparent={true}
+                {error ? <Text className="text-red-500 text-sm mb-2">{error}</Text> : null}
+
+                <TouchableOpacity
+                    onPress={handleResendCode}
+                    className="mt-2"
+                >
+                    <Text className="text-[#0B4D26] text-center text-sm">Resend code</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    onPress={handleVerify}
+                    className="w-full bg-[#0B4D26] p-3.5 rounded-md mt-6"
+                >
+                    <Text className="text-white text-center font-medium">
+                        Confirm
+                    </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    onPress={handleChangeEmail}
+                    className="mt-4"
+                >
+                    <Text className="text-[#0B4D26] text-sm">Change email</Text>
+                </TouchableOpacity>
+            </View>
+
+            <Text className="text-gray-400 text-xs text-center mb-4">
+                Copyright© 2024 AGRISCAPE. All rights reserved.
+            </Text>
+
+            {/* Replace the Modal with custom popup */}
+            <SuccessPopup
                 visible={modalVisible}
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
-                    <View className="bg-white p-6 rounded-lg shadow-lg">
-                        <Text className="text-xl font-bold">Verified!</Text>
-                        <Text className="mt-2 text-gray-600">Great! You have successfully verified the account.</Text>
-                        <TouchableOpacity
-                            onPress={handleContinue}
-                            className="bg-[#0B4D26] p-4 rounded-lg mt-4"
-                        >
-                            <Text className="text-white text-center font-semibold">Continue</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
+                onClose={() => {
+                    setModalVisible(false);
+                    router.push('/(main)/community');
+                }}
+            />
         </SafeAreaView>
     );
 }

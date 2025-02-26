@@ -2,14 +2,14 @@ import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Camera } from 'expo-camera';
 
 export default function DeviceConnection() {
     const router = useRouter();
 
     const handleStartSensor = () => {
-        // Logic to start the sensor
-        alert('Starting sensor...');
-        // You can implement the actual sensor logic here
+        // Navigate to the image capture screen
+        router.push('/ImageCapture');
     };
 
     return (

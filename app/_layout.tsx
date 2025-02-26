@@ -40,6 +40,7 @@ export default function RootLayout() {
         <Stack.Screen name="dashboard" options={{ headerShown: false }} />
         <Stack.Screen name="SoilDetectionProcess" options={{ headerShown: false }} />
         <Stack.Screen name="DeviceConnection" options={{ headerShown: false }} />
+        <Stack.Screen name="ImageCapture" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
