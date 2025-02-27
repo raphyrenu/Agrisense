@@ -45,57 +45,25 @@ export default function VerifyEmail() {
     };
 
     const handleCodeChange = (value: string, index: number) => {
-        // Remove non-numeric characters and get only the last digit if multiple digits
+        // Remove non-numeric characters
         const cleanValue = value.replace(/[^0-9]/g, '');
         const lastDigit = cleanValue.slice(-1);
 
-        // Find first empty position
-        let targetIndex = 0;
-        while (targetIndex < 4 && code[targetIndex] !== '') {
-            targetIndex++;
-        }
-
         const newCode = [...code];
 
-        if (cleanValue.length >= 1) {
-            // For single digit input
-            if (cleanValue.length === 1) {
-                if (targetIndex < 4) {
-                    newCode[targetIndex] = lastDigit;
-                    setCode(newCode);
+        if (cleanValue) {
+            // Update current input
+            newCode[index] = lastDigit;
 
-                    // Focus next input if available
-                    if (targetIndex < 3) {
-                        const nextInput = document.querySelector(`input[name="code-${targetIndex + 1}"]`) as HTMLElement;
-                        if (nextInput) nextInput.focus();
-                    }
-                }
-            } else {
-                // For pasting multiple digits
-                const digits = cleanValue.split('').slice(0, 4);
-                digits.forEach((digit, i) => {
-                    if (i < 4) newCode[i] = digit;
-                });
+            // Auto-advance to next input if available
+            if (index < 3 && lastDigit) {
                 setCode(newCode);
             }
+        } else {
+            // Handle deletion
+            newCode[index] = '';
         }
-    };
-
-    const handleKeyPress = (e: any, index: number) => {
-        if (e.nativeEvent.key === 'Backspace') {
-            const newCode = [...code];
-            // Only delete if there's a value in current input
-            if (code[index]) {
-                newCode[index] = '';
-                setCode(newCode);
-            } else if (index > 0) {
-                // Move to previous input if current is empty
-                newCode[index - 1] = '';
-                setCode(newCode);
-                const prevInput = document.querySelector(`input[name="code-${index - 1}"]`) as HTMLElement;
-                if (prevInput) prevInput.focus();
-            }
-        }
+        setCode(newCode);
     };
 
     const handleResendCode = () => {
@@ -183,13 +151,11 @@ export default function VerifyEmail() {
                     {[0, 1, 2, 3].map((index) => (
                         <TextInput
                             key={index}
-                            name={`code-${index}`}
                             value={code[index]}
                             onChangeText={(value) => handleCodeChange(value, index)}
-                            onKeyPress={(e) => handleKeyPress(e, index)}
-                            className="w-[22%] h-12 bg-[#F5F5F5] rounded-md text-center text-lg border-[0.5px] border-gray-200 outline-none"
+                            className="w-[22%] h-12 bg-[#F5F5F5] rounded-md text-center text-lg border-[0.5px] border-gray-200"
                             keyboardType="numeric"
-                            maxLength={4}
+                            maxLength={1}
                             style={{ fontSize: 18 }}
                             selectTextOnFocus={true}
                         />
