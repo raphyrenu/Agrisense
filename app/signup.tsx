@@ -110,13 +110,13 @@ export default function Signup() {
                     </Text>
                 </View>
 
-                <View className="mt-6 space-y-4">
+                <View className="mt-8 space-y-6">
                     <View>
                         <TextInput
                             placeholder="Email address"
                             value={formData.email}
                             onChangeText={(text) => setFormData({...formData, email: text})}
-                            className="bg-gray-100 p-4 rounded-lg"
+                            className="bg-gray-100 p-4 mb-4 rounded-lg"
                             keyboardType="email-address"
                         />
                         {errors.email ? <Text className="text-red-500 text-sm mt-1">{errors.email}</Text> : null}
@@ -127,7 +127,7 @@ export default function Signup() {
                             placeholder="Username"
                             value={formData.username}
                             onChangeText={(text) => setFormData({...formData, username: text})}
-                            className="bg-gray-100 p-4 rounded-lg"
+                            className="bg-gray-100 mb-4 p-4 rounded-lg"
                         />
                         {errors.username ? <Text className="text-red-500 text-sm mt-1">{errors.username}</Text> : null}
                     </View>
@@ -138,7 +138,7 @@ export default function Signup() {
                             value={formData.password}
                             onChangeText={(text) => setFormData({...formData, password: text})}
                             secureTextEntry={!showPassword}
-                            className="bg-gray-100 p-4 rounded-lg"
+                            className="bg-gray-100 p-4 mb-4 rounded-lg"
                         />
                         <TouchableOpacity
                             onPress={() => setShowPassword(!showPassword)}
@@ -155,7 +155,7 @@ export default function Signup() {
                             value={formData.confirmPassword}
                             onChangeText={(text) => setFormData({...formData, confirmPassword: text})}
                             secureTextEntry={!showConfirmPassword}
-                            className="bg-gray-100 p-4 rounded-lg"
+                            className="bg-gray-100 mb-4 p-4 rounded-lg"
                         />
                         <TouchableOpacity
                             onPress={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -196,7 +196,7 @@ export default function Signup() {
                     <View className="mt-16 space-y-4">
                         <Text className="text-center text-gray-500">or continue with</Text>
 
-                        <TouchableOpacity className="flex-row items-center justify-center space-x-2 border border-gray-300 p-4 rounded-lg">
+                        <TouchableOpacity className="flex-row items-center mb-4 justify-center space-x-2 border border-gray-300 p-4 rounded-lg">
                             <AntDesign name="google" size={24} color="#DB4437" />
                             <Text className="text-black font-semibold ml-2">Continue with Google</Text>
                         </TouchableOpacity>

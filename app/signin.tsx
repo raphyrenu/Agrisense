@@ -43,6 +43,7 @@ export default function SignIn() {
                 alert(response.message || 'Invalid credentials');
             }
         } catch (error) {
+            router.push(`/verifyEmail?email=${encodeURIComponent(formData.email)}`);
             alert('An error occurred during sign in');
             console.error(error);
         }
@@ -79,13 +80,13 @@ export default function SignIn() {
                     />
                 </View>
 
-                <View className="space-y-4">
+                <View className="space-y-6 mt-8">
                     <View>
                         <TextInput
                             placeholder="Email address"
                             value={formData.email}
                             onChangeText={(text) => setFormData({...formData, email: text})}
-                            className={`bg-gray-100 p-4 rounded-lg ${errors.email ? 'border-red-500 border' : ''}`}
+                            className={`bg-gray-100 mb-4 p-4 rounded-lg ${errors.email ? 'border-red-500 border' : ''}`}
                             keyboardType="email-address"
                         />
                         {errors.email ? <Text className="text-red-500 text-sm mt-1">{errors.email}</Text> : null}
@@ -97,7 +98,7 @@ export default function SignIn() {
                             value={formData.password}
                             onChangeText={(text) => setFormData({...formData, password: text})}
                             secureTextEntry={!showPassword}
-                            className={`bg-gray-100 p-4 rounded-lg ${errors.password ? 'border-red-500 border' : ''}`}
+                            className={`bg-gray-100 p-4 mb-4 rounded-lg ${errors.password ? 'border-red-500 border' : ''}`}
                         />
                         {errors.password ? <Text className="text-red-500 text-sm mt-1">{errors.password}</Text> : null}
                         <TouchableOpacity
