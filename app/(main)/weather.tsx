@@ -1,4 +1,4 @@
-import { View, TouchableOpacity, Text, ScrollView, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, TouchableOpacity, Text, ScrollView, SafeAreaView, ActivityIndicator, Platform } from 'react-native';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import WeatherHeader from '../components/weather/WeatherHeader';
@@ -8,10 +8,9 @@ import Metars from '../components/weather/Metars';
 import { useRouter } from 'expo-router';
 import * as Font from 'expo-font';
 import { Ionicons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 
-const API_KEY = '4a681263221d7d234ffedd87dc199cab'; // Replace with your OpenWeather API key
-const LAT = -1.9536; // Latitude for Kigali, Rwanda
-const LON = 30.0605; // Longitude for Kigali, Rwanda
+const API_KEY = '4a681263221d7d234ffedd87dc199cab';
 
 export default function Weather() {
   const router = useRouter();
@@ -23,37 +22,64 @@ export default function Weather() {
     pressure: '-- mb',
     visibility: '-- km',
     condition: '--',
+    location: 'Loading...',
   });
   const [hourlyForecast, setHourlyForecast] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+  const [coordinates, setCoordinates] = useState({ lat: null, lon: null });
 
   // Load fonts
   useEffect(() => {
-    const loadFonts = async () => {
-      await Font.loadAsync({
-        ...Ionicons.font,
-      });
-    };
+    async function loadFonts() {
+      try {
+        await Font.loadAsync(Ionicons.font);
+        setFontsLoaded(true);
+      } catch (e) {
+        console.error('Font loading error:', e);
+      }
+    }
     loadFonts();
+  }, []);
+
+  // Get user's location
+  useEffect(() => {
+    (async () => {
+      try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          setError('Permission to access location was denied');
+          return;
+        }
+
+        let location = await Location.getCurrentPositionAsync({});
+        setCoordinates({
+          lat: location.coords.latitude,
+          lon: location.coords.longitude,
+        });
+      } catch (e) {
+        setError('Failed to get location: ' + e.message);
+        // Fallback to Kigali coordinates
+        setCoordinates({ lat: -1.9536, lon: 30.0605 });
+      }
+    })();
   }, []);
 
   // Fetch weather data
   const fetchWeatherData = async () => {
+    if (!coordinates.lat || !coordinates.lon) return;
+
     try {
       setLoading(true);
       setError(null);
 
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Request timed out')), 10000)
-      );
-
-      const currentWeatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${LAT}&lon=${LON}&appid=${API_KEY}&units=metric`;
-      const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${LAT}&lon=${LON}&appid=${API_KEY}&units=metric`;
+      const currentWeatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${coordinates.lat}&lon=${coordinates.lon}&appid=${API_KEY}&units=metric`;
+      const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${coordinates.lat}&lon=${coordinates.lon}&appid=${API_KEY}&units=metric`;
 
       const [currentResponse, forecastResponse] = await Promise.all([
-        Promise.race([axios.get(currentWeatherUrl), timeoutPromise]),
-        Promise.race([axios.get(forecastUrl), timeoutPromise]),
+        axios.get(currentWeatherUrl, { timeout: 10000 }),
+        axios.get(forecastUrl, { timeout: 10000 }),
       ]);
 
       const currentData = currentResponse.data;
@@ -61,14 +87,15 @@ export default function Weather() {
 
       setWeatherData({
         temp: `${Math.round(currentData.main.temp)}°C`,
-        wind: `${currentData.wind.speed} km/h`,
+        wind: `${(currentData.wind.speed * 3.6).toFixed(1)} km/h`,
         humidity: `${currentData.main.humidity}%`,
         pressure: `${currentData.main.pressure} mb`,
         visibility: `${(currentData.visibility / 1000).toFixed(1)} km`,
         condition: currentData.weather[0].main.toLowerCase(),
+        location: `${currentData.name}, ${currentData.sys.country}`,
       });
 
-      const hourlyData = forecastData.map((item) => ({
+      const hourlyData = forecastData.slice(0, 24).map((item) => ({
         time: new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         temp: `${Math.round(item.main.temp)}°C`,
         icon: mapWeatherConditionToIcon(item.weather[0].main),
@@ -77,50 +104,39 @@ export default function Weather() {
       setHourlyForecast(hourlyData);
     } catch (error) {
       console.error('Failed to fetch weather data:', error);
-      setError('Failed to fetch weather data. Please try again.');
+      setError(error.message || 'Failed to fetch weather data');
     } finally {
       setLoading(false);
     }
   };
 
   const mapWeatherConditionToIcon = (condition) => {
-    switch (condition.toLowerCase()) {
-      case 'clear':
-        return 'sunny-outline';
-      case 'clouds':
-        return 'cloudy-outline';
-      case 'rain':
-        return 'rainy-outline';
-      case 'thunderstorm':
-        return 'thunderstorm-outline';
-      case 'snow':
-        return 'snow-outline';
-      default:
-        return 'partly-sunny-outline';
-    }
+    const conditionLower = condition.toLowerCase();
+    return {
+      clear: 'sunny-outline',
+      clouds: 'cloudy-outline',
+      rain: 'rainy-outline',
+      thunderstorm: 'thunderstorm-outline',
+      snow: 'snow-outline',
+    }[conditionLower] || 'partly-sunny-outline';
   };
 
   useEffect(() => {
-    fetchWeatherData();
-  }, [selectedDate]);
+    if (fontsLoaded && coordinates.lat && coordinates.lon) {
+      fetchWeatherData();
+    }
+  }, [fontsLoaded, coordinates, selectedDate]);
 
   const handleDateChange = (newDate) => {
     setSelectedDate(newDate);
   };
 
   const handleGetRecommended = () => {
-    const weekForecast = JSON.stringify([
-      {
-        day: 'Monday',
-        temp: weatherData.temp,
-        wind: weatherData.wind,
-        humidity: weatherData.humidity,
-        pressure: weatherData.pressure,
-        visibility: weatherData.visibility,
-        condition: weatherData.condition,
-        icon: 'sunny-outline',
-      },
-    ]);
+    const weekForecast = JSON.stringify([{
+      day: 'Today',
+      ...weatherData,
+      icon: mapWeatherConditionToIcon(weatherData.condition),
+    }]);
 
     router.push({
       pathname: '/(main)/forecast',
@@ -132,7 +148,7 @@ export default function Weather() {
     });
   };
 
-  if (loading) {
+  if (!fontsLoaded || loading || !coordinates.lat) {
     return (
       <SafeAreaView className="flex-1 bg-[#E7F4EA] justify-center items-center">
         <ActivityIndicator size="large" color="#0B4D26" />
@@ -144,6 +160,9 @@ export default function Weather() {
     return (
       <SafeAreaView className="flex-1 bg-[#E7F4EA] justify-center items-center">
         <Text className="text-[#0B4D26] text-lg">{error}</Text>
+        <TouchableOpacity onPress={fetchWeatherData} className="mt-4">
+          <Text className="text-[#0B4D26]">Retry</Text>
+        </TouchableOpacity>
       </SafeAreaView>
     );
   }
@@ -151,16 +170,20 @@ export default function Weather() {
   return (
     <SafeAreaView className="flex-1 bg-[#E7F4EA]">
       <ScrollView className="flex-1">
-        <WeatherHeader selectedDate={selectedDate} temperature={weatherData.temp} condition={weatherData.condition} />
+        <WeatherHeader 
+          selectedDate={selectedDate} 
+          temperature={weatherData.temp} 
+          condition={weatherData.condition}
+          location={weatherData.location}
+        />
         <DaySelector selectedDate={selectedDate} onSelectDate={handleDateChange} />
         <HourlyForecast hourlyData={hourlyForecast} />
         <Metars />
-
         <TouchableOpacity
           className="bg-[#0B4D26] mx-4 p-4 rounded-lg mb-6 mt-8"
           onPress={handleGetRecommended}
         >
-          <Text className="text-white text-center font-medium">Get recommended</Text>
+          <Text className="text-white text-center font-medium">Get Recommended</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
