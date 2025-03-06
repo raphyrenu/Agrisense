@@ -1,4 +1,4 @@
-import { View, TouchableOpacity, Text, ScrollView, SafeAreaView, ActivityIndicator, Platform } from 'react-native';
+import { View, TouchableOpacity, Text, ScrollView, SafeAreaView, ActivityIndicator } from 'react-native';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import WeatherHeader from '../components/weather/WeatherHeader';
@@ -43,30 +43,37 @@ export default function Weather() {
     loadFonts();
   }, []);
 
-  // Get user's location
+  // Get user's location with better error handling
   useEffect(() => {
     (async () => {
       try {
+        setLoading(true);
         let { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-          setError('Permission to access location was denied');
-          return;
+          throw new Error('Permission to access location was denied');
         }
 
-        let location = await Location.getCurrentPositionAsync({});
+        let location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.High,
+          timeout: 10000,
+        });
+        
+        console.log('Location obtained:', location.coords); // Debug log
+        
         setCoordinates({
           lat: location.coords.latitude,
           lon: location.coords.longitude,
         });
       } catch (e) {
-        setError('Failed to get location: ' + e.message);
+        console.error('Location error:', e);
+        setError(`Failed to get location: ${e.message}. Using fallback location.`);
         // Fallback to Kigali coordinates
         setCoordinates({ lat: -1.9536, lon: 30.0605 });
       }
     })();
   }, []);
 
-  // Fetch weather data
+  // Fetch weather data based on selected date
   const fetchWeatherData = async () => {
     if (!coordinates.lat || !coordinates.lon) return;
 
@@ -85,22 +92,58 @@ export default function Weather() {
       const currentData = currentResponse.data;
       const forecastData = forecastResponse.data.list;
 
+      // Filter forecast data based on selected date
+      const selectedDateStart = new Date(selectedDate);
+      selectedDateStart.setHours(0, 0, 0, 0);
+      const selectedDateEnd = new Date(selectedDate);
+      selectedDateEnd.setHours(23, 59, 59, 999);
+
+      const isToday = selectedDateStart.toDateString() === new Date().toDateString();
+      let dayWeather;
+
+      if (isToday) {
+        dayWeather = currentData;
+      } else {
+        const forecastForDay = forecastData.find(item => {
+          const itemDate = new Date(item.dt * 1000);
+          return itemDate >= selectedDateStart && itemDate <= selectedDateEnd;
+        }) || forecastData[0]; // Fallback to first forecast if no match
+        dayWeather = forecastForDay;
+      }
+
       setWeatherData({
-        temp: `${Math.round(currentData.main.temp)}°C`,
-        wind: `${(currentData.wind.speed * 3.6).toFixed(1)} km/h`,
-        humidity: `${currentData.main.humidity}%`,
-        pressure: `${currentData.main.pressure} mb`,
-        visibility: `${(currentData.visibility / 1000).toFixed(1)} km`,
-        condition: currentData.weather[0].main.toLowerCase(),
+        temp: `${Math.round(dayWeather.main.temp)}°C`,
+        wind: `${(dayWeather.wind.speed * 3.6).toFixed(1)} km/h`,
+        humidity: `${dayWeather.main.humidity}%`,
+        pressure: `${dayWeather.main.pressure} mb`,
+        visibility: `${(dayWeather.visibility / 1000).toFixed(1)} km`,
+        condition: dayWeather.weather[0].main.toLowerCase(),
         location: `${currentData.name}, ${currentData.sys.country}`,
       });
 
-      const hourlyData = forecastData.slice(0, 24).map((item) => ({
-        time: new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        temp: `${Math.round(item.main.temp)}°C`,
-        icon: mapWeatherConditionToIcon(item.weather[0].main),
-        isNow: new Date(item.dt * 1000).getHours() === new Date().getHours(),
-      }));
+      // Filter hourly forecast for selected day
+      const hourlyData = forecastData
+        .filter(item => {
+          const itemDate = new Date(item.dt * 1000);
+          return itemDate >= selectedDateStart && itemDate <= selectedDateEnd;
+        })
+        .map((item) => ({
+          time: new Date(item.dt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          temp: `${Math.round(item.main.temp)}°C`,
+          icon: mapWeatherConditionToIcon(item.weather[0].main),
+          isNow: isToday && new Date(item.dt * 1000).getHours() === new Date().getHours(),
+        }));
+
+      // If it's today, add current weather as first hourly entry
+      if (isToday) {
+        hourlyData.unshift({
+          time: 'Now',
+          temp: `${Math.round(currentData.main.temp)}°C`,
+          icon: mapWeatherConditionToIcon(currentData.weather[0].main),
+          isNow: true,
+        });
+      }
+
       setHourlyForecast(hourlyData);
     } catch (error) {
       console.error('Failed to fetch weather data:', error);
@@ -152,6 +195,7 @@ export default function Weather() {
     return (
       <SafeAreaView className="flex-1 bg-[#E7F4EA] justify-center items-center">
         <ActivityIndicator size="large" color="#0B4D26" />
+        <Text className="text-[#0B4D26] mt-2">Loading weather data...</Text>
       </SafeAreaView>
     );
   }
