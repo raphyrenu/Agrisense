@@ -4,16 +4,10 @@ import { formatDate } from '../../utils/dateUtils';
 interface WeatherHeaderProps {
     selectedDate: Date;
     temperature: string;
+    condition: string;
 }
 
-export default function WeatherHeader({ selectedDate, temperature }: WeatherHeaderProps) {
-    if (!(selectedDate instanceof Date)) {
-        console.error("selectedDate is not a Date object:", selectedDate);
-        return null; // Or handle the error appropriately
-    }
-
-    console.log("Date passed to formatDate:", selectedDate, "Type:", typeof selectedDate);
-
+export default function WeatherHeader({ selectedDate, temperature, condition }: WeatherHeaderProps) {
     const { fullDate } = formatDate(selectedDate);
 
     return (
@@ -26,6 +20,7 @@ export default function WeatherHeader({ selectedDate, temperature }: WeatherHead
                 {temperature}<Text className="text-4xl"></Text>
             </Text>
             <Text className="text-lg text-[#0B4D26]">Kigali, RWANDA</Text>
+            <Text className="text-lg text-[#0B4D26] capitalize">{condition}</Text>
         </View>
     );
 }
