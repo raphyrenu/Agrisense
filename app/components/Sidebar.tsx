@@ -42,7 +42,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     const data = await response.json();
 
                     if (response.ok) {
-                        setUsername(data.username);
+                        setUsername(data.user.username);
                     } else {
                         console.error('Failed to fetch user data');
                     }
