@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Ionicons, AntDesign } from '@expo/vector-icons';
-import { authApi, type SigninData } from '@/services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SignIn() {
     const router = useRouter();
@@ -32,20 +32,34 @@ export default function SignIn() {
         if (!validateForm()) return;
 
         try {
-            const response = await authApi.signin({
-                email: formData.email,
-                password: formData.password,
+            const response = await fetch('https://agrisense-tlsx.onrender.com/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: formData.email,
+                    password: formData.password,
+                }),
             });
 
-            if (response.success) {
-                router.push(`/verifyEmail?email=${encodeURIComponent(formData.email)}`);
+            const data = await response.json();
+
+            console.log('Response:', response);
+            console.log('Data:', data);
+
+            if (response.ok && data.token) {
+                // Save token to AsyncStorage or any secure storage
+                await AsyncStorage.setItem('token', data.token);
+
+                // Redirect to community page
+                router.push('/(main)/community');
             } else {
-                alert(response.message || 'Invalid credentials');
+                alert(data.message || 'Invalid credentials');
             }
         } catch (error) {
-            router.push(`/verifyEmail?email=${encodeURIComponent(formData.email)}`);
             alert('An error occurred during sign in');
-            console.error(error);
+            console.error('Sign in error:', error);
         }
     };
 

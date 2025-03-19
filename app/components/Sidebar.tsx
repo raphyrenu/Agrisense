@@ -1,7 +1,7 @@
 import { View, Text, Pressable, Image, ScrollView, StyleSheet, Alert, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const menuItems = [
@@ -24,6 +24,36 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const router = useRouter();
     const [activeRoute, setActiveRoute] = useState('/(main)/dashboard');
+    const [username, setUsername] = useState('');
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const token = await AsyncStorage.getItem('token');
+                if (token) {
+                    const response = await fetch('https://agrisense-tlsx.onrender.com/user', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        setUsername(data.username);
+                    } else {
+                        console.error('Failed to fetch user data');
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch user data', error);
+            }
+        };
+
+        fetchUserData();
+    }, []);
 
     const handleLogout = async () => {
         try {
@@ -48,7 +78,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     />
                     <View style={styles.profileInfo}>
                         <Text style={styles.greeting}>Good Day👋</Text>
-                        <Text style={styles.name}>Nelson IRASUBIZA</Text>
+                        <Text style={styles.name}>{username}</Text>
                     </View>
                 </View>
 

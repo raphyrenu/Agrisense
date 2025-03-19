@@ -1,3 +1,4 @@
+import React from 'react';
 import { View, Text, TouchableOpacity, Image, Dimensions, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -47,7 +48,7 @@ export default function SoilDetection() {
                         className="bg-[#0B4D26] w-full py-4 rounded-xl"
                     >
                         <Text className="text-white text-center text-lg font-medium">
-                            start now
+                            Start now
                         </Text>
                     </TouchableOpacity>
                 </View>
