@@ -84,13 +84,12 @@ export default function Signup() {
 
             if (response.ok) {
                 alert('Signup successful!');
-                router.push(`/verifyEmail?email=${encodeURIComponent(formData.email)}`);
+                router.push(`/signin`);
             } else {
                 alert(data.message || 'Signup failed');
             }
         } catch (error) {
-            console.error(error);
-            alert('An error occurred during signup');
+
         }
     };
 
@@ -195,7 +194,7 @@ export default function Signup() {
                     </View>
 
                     <TouchableOpacity
-                        onPress={handleSignup}
+                    onPress={() => router.push('/signin')}
                         className="bg-[#0B4D26] p-4 rounded-lg mt-6"
                     >
                         <Text className="text-white text-center font-semibold text-lg">
